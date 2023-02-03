@@ -2,3 +2,4 @@ chromelinux/
 edge/
 chromewin/
 venv/
+__pycache__
