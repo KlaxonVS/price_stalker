@@ -1,0 +1,11 @@
+Metadata-Version: 2.1
+Briefcase-Version: 0.3.12
+Name: pricestalker
+Formal-Name: Price Stalker
+App-ID: net.vorvorsky.pricestalker
+Version: 0.0.1
+Home-page: https://vorvorsky.net/pricestalker
+Download-URL: https://vorvorsky.net/pricestalker
+Author: Vitaly 'Vor' Godkov
+Author-email: vorvorsky@yandex.ru
+Summary: Bot container.
