@@ -1,14 +1,17 @@
-import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy.sql.expression import select, update
+import os
+
+from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
+                                    create_async_engine)
+from sqlalchemy.sql.expression import delete, select, update
 
 from models import Base, Item
-from settings import DATABASE_NAME
+from settings import DATABASE_NAME, BASE_DIR
 
 
 async def create_database():
     engine = create_async_engine(
-        f'sqlite+aiosqlite:///{DATABASE_NAME}.db', echo=True
+        f'sqlite+aiosqlite:///{os.path.join(BASE_DIR, DATABASE_NAME)}.db',
+        echo=True
     )
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -17,7 +20,8 @@ async def create_database():
 def run_session(function):
     async def _wrapper(item):
         engine = create_async_engine(
-            f'sqlite+aiosqlite:///{DATABASE_NAME}.db', echo=True
+            f'sqlite+aiosqlite:///{os.path.join(BASE_DIR, DATABASE_NAME)}.db',
+            echo=True
         )
         async_session = async_sessionmaker(engine)
         result = await function(async_session, item)
@@ -30,20 +34,16 @@ def run_session(function):
 async def check_item(async_session: async_sessionmaker[AsyncSession], item_id):
     async with async_session() as session:
         async with session.begin():
-            check = session.execute(
-                select(Item.id).where(id == item_id).exists().scalar_one()
-            )
+            check = await session.get(Item, item_id)
             await session.commit()
-            return await check
+            return check is None
 
 
 @run_session
 async def add_item(async_session: async_sessionmaker[AsyncSession], item):
     async with async_session() as session:
-        item_id = item[0]
-        price = item[1]
         async with session.begin():
-            session.add(Item(id=item_id, price=price))
+            session.add(Item(id=item[0], price=item[1], title=item[2]))
             await session.commit()
 
 
@@ -51,10 +51,11 @@ async def add_item(async_session: async_sessionmaker[AsyncSession], item):
 async def add_items(async_session: async_sessionmaker[AsyncSession], items):
     async with async_session() as session:
         async with session.begin():
-            session.add_all([
-                Item(id=item[0], price=item[1])
-                for item in items
-                ])
+            items = [
+                Item(id=item, price=price_title[0], title=price_title[1])
+                for item, price_title in items.items()
+                ]
+            session.add_all(items)
             await session.commit()
 
 
@@ -62,7 +63,6 @@ async def add_items(async_session: async_sessionmaker[AsyncSession], items):
 async def update_item(async_session: async_sessionmaker[AsyncSession], item):
     async with async_session() as session:
         async with session.begin():
-            print(item[0])
             await session.execute(
                 update(Item).where(Item.id == item[0]).values(price=item[1])
             )
@@ -70,10 +70,20 @@ async def update_item(async_session: async_sessionmaker[AsyncSession], item):
 
 
 @run_session
-async def delete_item(async_session: async_sessionmaker[AsyncSession], item_id):
+async def delete_item(async_session: async_sessionmaker[AsyncSession],
+                      item_id):
     async with async_session() as session:
         async with session.begin():
-            session.delete(session.get(Item, item_id))
+            await session.execute(delete(Item).where(Item.id == item_id))
+            await session.commit()
+
+
+@run_session
+async def delete_all(async_session: async_sessionmaker[AsyncSession], item):
+    item = Item if 'item' else item
+    async with async_session() as session:
+        async with session.begin():
+            await session.execute(delete(Item).where(Item.id))
             await session.commit()
 
 
@@ -86,11 +96,5 @@ async def get_all(async_session: async_sessionmaker[AsyncSession], item):
             session.expunge_all()
             return result
 
-
-'''if __name__ == '__main__':
-    async def main():
-        items = await get_all(Item)
-        for item in items:
-            print(item.id, item.price)
-
-asyncio.run(main())'''
+if __name__ == '__name__':
+    create_database()

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Column, Integer
+from sqlalchemy import Column, Integer, String
 
 
 class Base(DeclarativeBase):
@@ -11,3 +11,4 @@ class Item(Base):
 
     id = Column(Integer, primary_key=True)
     price = Column(Integer, nullable=False)
+    title = Column(String(150),)

@@ -1,0 +1,11 @@
+async def commands_menu(self):
+        await self.dp.bot.set_my_commands([
+            types.BotCommand('add_list', 'Следить за товарами'),
+            types.BotCommand('delete', 'Снять слежку за товаром'),
+            types.BotCommand('start', 'Запуск бота и создание БД'),
+        ])
+
+@self.dp.message_handler(commands=['add'])
+    async def cmd_add(message: types.Message,):
+    """Ответ бота на команду /add"""
+        await message.answer('Пришлите ссылку на товар')
