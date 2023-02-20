@@ -199,6 +199,9 @@ class BotTelegram:
         if not self.local:
             loop = asyncio.get_running_loop()
             asyncio.run_coroutine_threadsafe(
+                self.commands_menu(), loop
+            )
+            asyncio.run_coroutine_threadsafe(
                 self.dp.start_polling(timeout=3), loop
             )
             asyncio.run_coroutine_threadsafe(self.scan_prices(), loop)
