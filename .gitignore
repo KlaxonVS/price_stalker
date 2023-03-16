@@ -4,3 +4,4 @@ edge/
 chromewin/
 venv/
 __pycache__/
+.env
